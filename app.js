@@ -9,13 +9,19 @@ var bodyParser = require('body-parser')
 var indexRouter = require('./routes/index');
 var stocksRouter = require('./routes/stock');
 var usersRouter = require('./routes/users');
-var masterRouter = require('./routes/master');
-var transactionRouter = require('./routes/transaction');
+var productRouter = require('./routes/product');
+var invoiceRouter = require('./routes/invoice');
+var categoryRouter = require('./routes/category');
+var subCategoryRouter = require('./routes/subCategory');
+var sizeRouter = require('./routes/size');
+
+
 // var usersRouter = require('./routes/users');
 
 
 
 const connectDB = require('./classes/db');
+const categoryMaster = require('./models/category-master');
 
 var app = express();
 
@@ -35,8 +41,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/stocks', stocksRouter);
 app.use('/users', usersRouter);
-app.use('/master', masterRouter);
-app.use('/transaction', transactionRouter);
+app.use('/product', productRouter);
+app.use('/transaction', invoiceRouter);
+app.use('/category', categoryRouter);
+app.use('/subCategory', subCategoryRouter);
+app.use('/size', sizeRouter);
+
+
 // app.use('/master', masterRouter);
 
 

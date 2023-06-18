@@ -1,34 +1,36 @@
 const stock = require('../models/stock');
 const stockSchema = require('../models/stock');
+var async = require("async");
 
 const addStock = async (data) => {
     try {
-        console.log(data)
-        const Stock = new stockSchema({
-            name: data.name,
-            stocks: data.quantities
-        })
 
-        stock.findOne({ name: data.name })
-            .then(async function (stock, error) {
-                if (stock) {
-                    //update the quantity of that size
-                } else {
-                    await Stock.save().then((stock) => {
-                        return ({
-                            status: 200,
-                            message: "stock added successfully",
-                            data: stock
-                        })
+        data.forEach(async d => {
+            console.log(d)
+            d.quantities.forEach(async q => {
+
+
+                const Stock = new stockSchema({
+                    name: d.name + "|" + q.size,
+                    code: d.code,
+                    quantity: q.quantity
+                })
+                await stockSchema.findOne({ name: d.name + "|" + q.size })
+                    .then(async res => {
+                        if (res) {
+
+                        } else {
+                            await Stock.save().then((stock) => {
+                                console.log(stock)
+                            })
+                                .catch(err => {
+                                    console.log(err)
+                                })
+                        }
                     })
-                }
+
             })
-            .catch((err) => {
-                console.log(err)
-                return ({
-                    status: 400, message: err, process: 'stock'
-                });
-            })
+        })
     }
     catch (err) {
         console.log(err)
@@ -40,30 +42,23 @@ const addStock = async (data) => {
 
 const getStocks = async (req, res) => {
     try {
-        console.log("asdasdsa")
         stockSchema.find()
             .then(async stocks => {
 
                 if (stocks) {
-                    let columns = [];
-                    stocks.forEach(s => {
-                        s.type.filter(t => {
-                            s[t.size] = t.value
-                            !columns.includes(t.size) && columns.push(t.size);
-                        })
-                    })
-
-                    // let newStocks = await addKey(stocks);
-
-                    columns = columns.sort(function (a, b) {
-                        var keyA = (a),
-                            keyB = (b);
-                        if (keyA < keyB) return -1;
-                        if (keyA > keyB) return 1;
-                        return 0;
+                    let grouped = {};
+                    stocks.forEach(function (a) {
+                        console.log(a)
+                        grouped[a.code] = grouped[a.code] || [];
+                        grouped[a.code].push({
+                            name: a.name,
+                            code: a.code,
+                            quantity: a.quantity,
+                        });
                     });
 
-                    return res.send({ status: 200, columns: columns, data: stocks, totalMessages: stocks.length, process: 'stock1' })
+
+                    return res.send({ status: 200, data: grouped, totalMessages: stocks.length, process: 'stock1' })
                 } else {
                     return res.send({ status: 200, data: stocks, message: 'stocks does not exist', process: 'stock' })
                 }
@@ -94,22 +89,5 @@ const addKey = async (stocks) => {
     return stocks;
 }
 
-// console.log(addKey([
-//     {
-//         "_id": "647ca211ca387b27b37fee49",
-//         "name": "stock 1",
-//         "type": [
-//             {
-//                 "key": "2/6",
-//                 "value": 23
-//             },
-//             {
-//                 "key": "4/6",
-//                 "value": 10
-//             }
-//         ],
-//         "party": "qwq",
-//         "__v": 0
-//     }]))
 
 module.exports = { addStock, getStocks }

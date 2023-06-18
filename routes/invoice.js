@@ -3,7 +3,7 @@ var router = express.Router();
 
 const { requireSignin } = require('../middleware');
 const { addProductMaster, getProductMaster } = require('../controller/productMaster');
-const { addTransaction, getTransaction } = require('../controller/transaction');
+const { addTransaction, getTransaction } = require('../controller/invoice');
 
 
 /* GET users listing. */

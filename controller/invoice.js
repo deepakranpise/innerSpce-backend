@@ -1,31 +1,44 @@
-const transactionSchema = require('../models/transaction');
+const invoiceSchema = require('../models/invoice');
+const stockSchema = require('../models/stock');
+const mongoose = require('mongoose')
+
+
+
 const { addStock } = require('./stock');
 
 const addTransaction = async (req, res) => {
     try {
-        const Transaction = new transactionSchema({
-            party: req.body.party,
-            invoiceNo: req.body.invoiceNo,
+        const Transaction = new invoiceSchema({
+            clientName: req.body.clientName,
+            id: req.body.id,
+            invoiceDate: req.body.invoiceDate,
+            type: req.body.type,
             products: req.body.products
         })
-        await Transaction.save().then(async (transaction) => {
+        const transactionSave = await Transaction.save()
 
-            let AddStock = await addStock(req.body.products);
-            console.log(AddStock);
-
-
+        const bulkWriteData = []
+        req.body.products.forEach(stockUpdate => {
+            let count = stockUpdate.quantity || 0;
+            if (req.body.type === "sell") {
+                count = stockUpdate.quantity * -1
+            }
+            const data = {
+                updateOne: {filter:{productId:new mongoose.Types.ObjectId(stockUpdate.productId)},
+                    update:{$inc:{quantity: count }},
+                    upsert:true
+                }
+            }
+            bulkWriteData.push(data)
+        });
+        if (bulkWriteData.length > 0) {
+            const updateStockCollection = await stockSchema.bulkWrite(bulkWriteData);
             return res.send({
                 status: 200,
                 message: "transaction added successfully",
-                data: transaction
+                data: updateStockCollection
             })
-        })
-            .catch((err) => {
-                console.log(err)
-                return res.send({
-                    status: 400, message: err, process: 'transaction'
-                });
-            })
+        }
     }
     catch (err) {
         console.log(err)

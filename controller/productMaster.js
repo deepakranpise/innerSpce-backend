@@ -1,26 +1,41 @@
 const productMasterSchema = require('../models/product-master');
+const sizeSchema = require('../models/size-master');
+const mongoose = require('mongoose')
+
+
 
 const addProductMaster = async (req, res) => {
     try {
-        console.log(req.body)
-        const Product = new productMasterSchema({
-            category: req.body.category,
-            subCategory: req.body.subCategory,
-            products: req.body.products
-        })
-        await Product.save().then((product) => {
-            return res.send({
-                status: 200,
-                message: "product added successfully",
-                data: product
-            })
-        })
-            .catch((err) => {
-                console.log(err)
-                return res.send({
-                    status: 400, message: err, process: 'product'
-                });
-            })
+        console.log(req.body);
+
+        const { size } = await sizeSchema.findOne({ categoryId: new mongoose.Types.ObjectId(req.body.categoryId) }, { size: 1, _id: 0 }).lean();
+        console.log(size)
+        if (size.length > 0) {
+            let bulkSave = [];
+            const data = {
+                name: req.body.name,
+                categoryId: req.body.categoryId,
+                subCategoryId: req.body.subCategoryId,
+            }
+            size.forEach(s => {
+                const saveProduct = new productMasterSchema({
+                    ...data,
+                    size: s
+                })
+                bulkSave.push(saveProduct);
+            });
+
+            // const result = await bulkSave.save()
+
+            const result = await productMasterSchema.bulkSave(bulkSave);
+
+            return res.send(result)
+            //    if(result) {
+
+            //    }
+
+
+        }
     }
     catch (err) {
         console.log(err)
@@ -32,7 +47,6 @@ const addProductMaster = async (req, res) => {
 
 const getProductMaster = async (req, res) => {
     try {
-        console.log("asdasdsa")
         productMasterSchema.find()
             .then(async products => {
 

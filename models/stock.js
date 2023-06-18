@@ -3,28 +3,17 @@ const mongoose = require('mongoose')
 
 const stockSchema = new mongoose.Schema({
 
-    name:
+    productId:
     {
-        type: String,
+        type: mongoose.Schema.ObjectId,
         required: true,
         unique: true,
         trim: true
     },
-    quantities: [
-        {
-            size: {
-                type: String,
-                required: true,
-                unique: true,
-                trim: true
-            },
-            quantity: {
-                type: String,
-                required: true,
-                trim: true
-            }
-        }
-    ]
+    quantity: {
+        type: Number,
+        required: true
+    }
 },
     { timestamp: true });
 
