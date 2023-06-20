@@ -42,23 +42,48 @@ const addStock = async (data) => {
 
 const getStocks = async (req, res) => {
     try {
-        stockSchema.find()
+        stockSchema.aggregate([
+            {
+                $lookup: {
+                    from: "product-masters",
+                    localField: "productId",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            }, {
+                $unwind: {
+                    path: "$product",
+                    preserveNullAndEmptyArrays: true
+                }
+            }, {
+                $project: {
+                    "ProductName": "$product.name",
+                    "_id": 1,
+                    "productId": 1,
+                    "quantity": 1,
+                    "size": "$product.size"
+                }
+            }
+            , {
+                $group: {
+                    _id: "$ProductName",
+                    data: {
+                        $push: "$$ROOT",
+                    },
+                },
+            },
+        ])
             .then(async stocks => {
 
+                stocks.map(d => {
+                    d.data.map(dd => {
+                        d[dd.size] = dd.quantity;
+                    })
+                })
+
+
                 if (stocks) {
-                    let grouped = {};
-                    stocks.forEach(function (a) {
-                        console.log(a)
-                        grouped[a.code] = grouped[a.code] || [];
-                        grouped[a.code].push({
-                            name: a.name,
-                            code: a.code,
-                            quantity: a.quantity,
-                        });
-                    });
-
-
-                    return res.send({ status: 200, data: grouped, totalMessages: stocks.length, process: 'stock1' })
+                    return res.send({ status: 200, data: stocks, totalMessages: stocks.length, process: 'stock1' })
                 } else {
                     return res.send({ status: 200, data: stocks, message: 'stocks does not exist', process: 'stock' })
                 }

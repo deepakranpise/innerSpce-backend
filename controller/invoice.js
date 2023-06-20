@@ -24,9 +24,10 @@ const addTransaction = async (req, res) => {
                 count = stockUpdate.quantity * -1
             }
             const data = {
-                updateOne: {filter:{productId:new mongoose.Types.ObjectId(stockUpdate.productId)},
-                    update:{$inc:{quantity: count }},
-                    upsert:true
+                updateOne: {
+                    filter: { productId: new mongoose.Types.ObjectId(stockUpdate.productId) },
+                    update: { $inc: { quantity: count } },
+                    upsert: true
                 }
             }
             bulkWriteData.push(data)
@@ -50,8 +51,16 @@ const addTransaction = async (req, res) => {
 
 const getTransaction = async (req, res) => {
     try {
-        console.log("asdasdsa")
-        transactionSchema.find()
+        invoiceSchema.aggregate([
+            {
+                $lookup: {
+                    from: "product-masters",
+                    localField: "products.productId",
+                    foreignField: "_id",
+                    as: "products"
+                }
+            }
+        ])
             .then(async transactions => {
 
                 if (transactions) {

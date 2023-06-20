@@ -47,11 +47,46 @@ const addProductMaster = async (req, res) => {
 
 const getProductMaster = async (req, res) => {
     try {
-        productMasterSchema.find()
+        // productMasterSchema.aggregate([
+        //     {
+        //         $lookup: {
+        //             from: "categories",
+        //             localField: "categoryId",
+        //             foreignField: "_id",
+        //             as: "category"
+        //         }
+        //     }, {
+        //         $unwind: {
+        //             path: "$category",
+        //             preserveNullAndEmptyArrays: true
+        //         }
+        //     }, {
+        //         $project: {
+        //             "ProductName": "$product.name",
+        //             "_id": 1,
+        //             "productId": 1,
+        //             "quantity": 1,
+        //             "size": "$product.size"
+        //         }
+        //     }
+        // ])
+
+
+        productMasterSchema.find().populate([{ path: 'categoryId', model: 'Category', select: { name: 1, _id: 0 } }, { path: 'subCategoryId', model: 'SubCategory', select: { name: 1, _id: 0 } }])
             .then(async products => {
 
+                let unique = products;
+                if (req.query.distinct) {
+                    unique = [];
+                    products.forEach(p => {
+                        let a = unique.filter(u => u.name === p.name);
+                        if (a.length === 0) {
+                            unique.push(p);
+                        }
+                    })
+                }
                 if (products) {
-                    return res.send({ status: 200, data: products, totalMessages: products.length, process: 'products' })
+                    return res.send({ status: 200, data: unique, totalMessages: products.length, process: 'products' })
                 } else {
                     return res.send({ status: 200, data: products, message: 'products does not exist', process: 'products' })
                 }
