@@ -31,7 +31,16 @@ const addSubCategory = async (req, res) => {
 
 const getSubCategories = async (req, res) => {
     try {
-        subCategorySchema.find()
+        subCategorySchema.aggregate([
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'categoryId',
+                    foreignField: '_id',
+                    as: 'categoryId'
+                }
+            }
+        ])
             .then(async category => {
                 if (category) {
                     return res.send({ status: 200, data: category, process: 'subCategorySchema' })

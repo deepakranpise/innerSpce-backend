@@ -32,6 +32,7 @@ const getCategories = async (req, res) => {
     try {
         categorySchema.find()
             .then(async category => {
+                console.log(category)
                 if (category) {
                     return res.send({ status: 200, data: category, process: 'category' })
                 } else {

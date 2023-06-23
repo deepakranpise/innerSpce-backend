@@ -29,7 +29,16 @@ const addSize = async (req, res) => {
 
 const getSizes = async (req, res) => {
     try {
-        sizeSchema.find()
+        sizeSchema.aggregate([
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'categoryId',
+                    foreignField: '_id',
+                    as: 'categoryId'
+                }
+            }
+        ])
             .then(async size => {
                 if (size) {
                     return res.send({ status: 200, data: size, process: 'size' })
