@@ -3,9 +3,14 @@ const mongoose = require('mongoose')
 function connectDB() {
     try {
         mongoose.set('strictQuery', false)
-        mongoose.connect("mongodb://localhost:27017/dheeraj-app", {useNewUrlParser: true}) 
+        mongoose.connect(process.env.dbUrl,
+            {
+                useNewUrlParser: true,
+                useUnifiedTopology: true,
+                retryWrites: false
+            })
         console.log('Mongo connected')
-    } catch(error) {
+    } catch (error) {
         console.log(error)
         process.exit()
     }

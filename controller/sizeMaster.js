@@ -9,15 +9,23 @@ const addSize = async (req, res) => {
             categoryId: req.body.categoryId
         })
 
-        await size.save()
-            .then(result => {
-                res.send({ status: 200, data: result, process: "size" })
-            })
-            .catch(err => {
-                res.send({ status: 400, data: err, process: "size" })
-                console.log(err)
+        sizeSchema.findOneAndUpdate({ categoryId: req.body.categoryId }, { $push: { size: req.body.size[0] } })
+            .then(async update => {
+                if (update) {
+                    res.send({ status: 200, data: update, process: "size" })
+                } else {
+                    await size.save()
+                        .then(result => {
+                            res.send({ status: 200, data: result, process: "size" })
+                        })
+                        .catch(err => {
+                            res.send({ status: 400, data: err, process: "size" })
+                            console.log(err)
 
+                        })
+                }
             })
+
     }
     catch (err) {
         console.log(err)

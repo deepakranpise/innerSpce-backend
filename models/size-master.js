@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 
 const categorySchema = new mongoose.Schema({
     size: { type: Array, required: true, trim: true },
-    categoryId: { type: mongoose.Schema.ObjectId, required: true, trim: true }
+    categoryId: { type: mongoose.Schema.ObjectId, required: true, trim: true, unique: true }
 },
     { timestamp: true });
 
