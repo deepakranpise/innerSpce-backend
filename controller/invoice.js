@@ -15,7 +15,6 @@ const addTransaction = async (req, res) => {
             type: req.body.type,
             products: req.body.products
         })
-        const transactionSave = await Transaction.save()
 
         const bulkWriteData = []
         req.body.products.forEach(stockUpdate => {
@@ -25,20 +24,41 @@ const addTransaction = async (req, res) => {
             }
             const data = {
                 updateOne: {
-                    filter: { productId: new mongoose.Types.ObjectId(stockUpdate.productId) },
+                    filter: { productId: new mongoose.Types.ObjectId(stockUpdate?.isSegregated ? stockUpdate.from : stockUpdate.productId) },
                     update: { $inc: { quantity: count } },
                     upsert: true
                 }
             }
             bulkWriteData.push(data)
+
+            if (stockUpdate?.isSegregated) {
+                const data2 = {
+                    updateOne: {
+                        filter: { productId: new mongoose.Types.ObjectId(stockUpdate.leftOver) },
+                        update: { $inc: { quantity: count * (-1) } },
+                        upsert: true
+                    }
+                }
+                bulkWriteData.push(data2)
+
+            }
         });
         if (bulkWriteData.length > 0) {
             const updateStockCollection = await stockSchema.bulkWrite(bulkWriteData);
-            return res.send({
-                status: 200,
-                message: "transaction added successfully",
-                data: updateStockCollection
-            })
+            if (updateStockCollection) {
+                const transactionSave = await Transaction.save()
+                return res.send({
+                    status: 200,
+                    message: "transaction added successfully",
+                    data: updateStockCollection
+                })
+            } else {
+                return res.send({
+                    status: 400,
+                    message: "unexpected error occured",
+                    data: "updateStockCollection"
+                })
+            }
         }
     }
     catch (err) {
