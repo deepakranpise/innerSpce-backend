@@ -9,7 +9,7 @@ const addSize = async (req, res) => {
             categoryId: req.body.categoryId
         })
 
-        sizeSchema.findOneAndUpdate({ categoryId: req.body.categoryId }, { $push: { size: req.body.size[0] } })
+        sizeSchema.findOneAndUpdate({ categoryId: req.body.categoryId }, { $push: { size: { $each: req.body.size } } })
             .then(async update => {
                 if (update) {
                     res.send({ status: 200, data: update, process: "size" })

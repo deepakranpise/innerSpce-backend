@@ -14,6 +14,8 @@ var invoiceRouter = require('./routes/invoice');
 var categoryRouter = require('./routes/category');
 var subCategoryRouter = require('./routes/subCategory');
 var sizeRouter = require('./routes/size');
+var clientRouter = require('./routes/client');
+
 
 
 // var usersRouter = require('./routes/users');
@@ -46,6 +48,7 @@ app.use('/transaction', invoiceRouter);
 app.use('/category', categoryRouter);
 app.use('/subCategory', subCategoryRouter);
 app.use('/size', sizeRouter);
+app.use('/client', clientRouter);
 
 
 // app.use('/master', masterRouter);

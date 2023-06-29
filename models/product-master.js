@@ -7,6 +7,10 @@ const productMasterSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    code: {
+        type: String,
+        required: true
+    },
     categoryId:
     {
         type: mongoose.Schema.ObjectId,

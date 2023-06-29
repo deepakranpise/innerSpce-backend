@@ -14,8 +14,9 @@ const addProductMaster = async (req, res) => {
             let bulkSave = [];
             const data = {
                 name: req.body.name,
+                code:req.body.code,
                 categoryId: req.body.categoryId,
-                subCategoryId: req.body.subCategoryId,
+                subCategoryId: req.body.subCategoryId
             }
             size.forEach(s => {
                 const saveProduct = new productMasterSchema({
@@ -29,7 +30,7 @@ const addProductMaster = async (req, res) => {
 
             const result = await productMasterSchema.bulkSave(bulkSave);
 
-            return res.send(result)
+            return res.send({status:200, message:result, process:'product'})
             //    if(result) {
 
             //    }
@@ -72,7 +73,7 @@ const getProductMaster = async (req, res) => {
         // ])
 
 
-        productMasterSchema.find().populate([{ path: 'categoryId', model: 'Category', select: { name: 1, _id: 0 } }, { path: 'subCategoryId', model: 'SubCategory', select: { name: 1, _id: 0 } }])
+        productMasterSchema.find().populate([{ path: 'categoryId', model: 'Category', select: { name: 1, _id: 1 } }, { path: 'subCategoryId', model: 'SubCategory', select: { name: 1, _id: 1 } }])
             .then(async products => {
 
                 let unique = products;

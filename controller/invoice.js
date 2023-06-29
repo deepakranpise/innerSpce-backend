@@ -51,16 +51,17 @@ const addTransaction = async (req, res) => {
 
 const getTransaction = async (req, res) => {
     try {
-        invoiceSchema.aggregate([
-            {
-                $lookup: {
-                    from: "product-masters",
-                    localField: "products.productId",
-                    foreignField: "_id",
-                    as: "products"
-                }
-            }
-        ])
+        // invoiceSchema.aggregate([
+        //     {
+        //         $lookup: {
+        //             from: "product-masters",
+        //             localField: "products.productId",
+        //             foreignField: "_id",
+        //             as: "products"
+        //         }
+        //     }
+        // ])
+        invoiceSchema.find().populate([{ path: 'products.productId', model: 'Product-Master' }, { path: 'clientName', model: 'Client' }])
             .then(async transactions => {
 
                 if (transactions) {
