@@ -16,49 +16,54 @@ const addTransaction = async (req, res) => {
             products: req.body.products
         })
 
-        const bulkWriteData = []
-        req.body.products.forEach(stockUpdate => {
-            let count = stockUpdate.quantity || 0;
-            if (req.body.type === "sell") {
-                count = stockUpdate.quantity * -1
-            }
-            const data = {
-                updateOne: {
-                    filter: { productId: new mongoose.Types.ObjectId(stockUpdate?.isSegregated ? stockUpdate.from : stockUpdate.productId) },
-                    update: { $inc: { quantity: count } },
-                    upsert: true
+        const transactionSave = await Transaction.save()
+        if (transactionSave) {
+            const bulkWriteData = []
+            req.body.products.forEach(stockUpdate => {
+                let count = stockUpdate.quantity || 0;
+                if (req.body.type === "sell") {
+                    count = stockUpdate.quantity * -1
                 }
-            }
-            bulkWriteData.push(data)
-
-            if (stockUpdate?.isSegregated) {
-                const data2 = {
+                const data = {
                     updateOne: {
-                        filter: { productId: new mongoose.Types.ObjectId(stockUpdate.leftOver) },
-                        update: { $inc: { quantity: count * (-1) } },
+                        filter: { productId: new mongoose.Types.ObjectId(stockUpdate?.isSegregated ? stockUpdate.from : stockUpdate.productId) },
+                        update: { $inc: { quantity: count } },
                         upsert: true
                     }
                 }
-                bulkWriteData.push(data2)
+                bulkWriteData.push(data)
 
+                if (stockUpdate?.isSegregated) {
+                    const data2 = {
+                        updateOne: {
+                            filter: { productId: new mongoose.Types.ObjectId(stockUpdate.leftOver) },
+                            update: { $inc: { quantity: count * (-1) } },
+                            upsert: true
+                        }
+                    }
+                    bulkWriteData.push(data2)
+
+                }
+            });
+            if (bulkWriteData.length > 0) {
+                const updateStockCollection = await stockSchema.bulkWrite(bulkWriteData);
+                if (updateStockCollection) {
+                    return res.send({
+                        status: 200,
+                        message: "transaction added successfully",
+                        data: updateStockCollection
+                    })
+                } else {
+                    return res.send({
+                        status: 400,
+                        message: "unexpected error occured",
+                        data: "updateStockCollection"
+                    })
+                }
             }
-        });
-        if (bulkWriteData.length > 0) {
-            const updateStockCollection = await stockSchema.bulkWrite(bulkWriteData);
-            if (updateStockCollection) {
-                const transactionSave = await Transaction.save()
-                return res.send({
-                    status: 200,
-                    message: "transaction added successfully",
-                    data: updateStockCollection
-                })
-            } else {
-                return res.send({
-                    status: 400,
-                    message: "unexpected error occured",
-                    data: "updateStockCollection"
-                })
-            }
+        } else {
+            return res.send({ status: 400, message: "Unexpected error occured", process: 'transactions' })
+
         }
     }
     catch (err) {
