@@ -88,42 +88,44 @@ const addTransaction = async (req, res) => {
 
 const getTransaction = async (req, res) => {
   try {
-    const {subCategoryId,categoryId,productId}=req.params;
-        
+    let {subCategoryId,categoryId,productId}=req.params;
     let populateSubCategory={
         path:'subCategoryId',
         model:'SubCategory',
-        select:{_id:0,name:1,categoryId:1}  
+        select:{_id:1,name:1,categoryId:1}  
     }
     if(subCategoryId){
-        populateSubCategory["match"]={ "subCategoryId": { "$in": [mongoose.Types.ObjectId(subCategoryId)] } }
+        let subCategoryId =new mongoose.Types.ObjectId(subCategoryId)
+        populateSubCategory["match"]={ "_id":subCategoryId}
     }
 
     let populateCategory={
         path:'categoryId',
         model:'Category',
-        select:{_id:0,name:1}
+        select:{_id:1,name:1}
     }
     if(categoryId){
-        populateCategory["match"]={ "categoryId": { "$in": [mongoose.Types.ObjectId(categoryId)] } };
+        let categoryId =new mongoose.Types.ObjectId(categoryId)
+        populateCategory["match"]={ "_id":categoryId };
     }
+
     populateSubCategory["populate"]=populateCategory
     let populateProduct = {
         path: "products.productId",
         model:"Product-Master"}
+
     if(productId){
-        populateProduct["match"]= { "productId": { "$in": [mongoose.Types.ObjectId(productId)] } }
+        productId=new mongoose.Types.ObjectId(productId)
+        populateProduct["match"]= { "_id": productId }
     }
     populateProduct["populate"]=populateSubCategory;
-
-    console.log("Populate...",populateProduct)
-
 
     invoiceSchema
       .find({})
       .populate(populateProduct).then(async (transactions) => {
         if (transactions) {
-            const result=processTransaction(transactions)
+            const result=processTransaction(transactions,productId,categoryId,subCategoryId);
+            console.log(result)
           return res.send({
             status: 200,
             data: result,
@@ -153,25 +155,29 @@ const getTransaction = async (req, res) => {
   }
 };
 
-function processTransaction(transactions){
+function processTransaction(transactions,product,subCategory,categoryId){
     let result=[]
     transactions.forEach(invoice => {
         const {products}=invoice;
         products.forEach(data => {
             let tempResult={}
-            const {quantity,productId }=data
-            const {name,code,size,subCategoryId}=productId;
-            tempResult.invoiceDate=invoice.invoiceDate;
-            tempResult.invoiceNo=invoice.id;
-            tempResult.type=invoice.type;
-            tempResult.clientName=invoice.clientName.name;
-            tempResult.name=name;
-            tempResult.code=code;
-            tempResult.size=size;
-            tempResult.quantity=quantity;
-            tempResult.subCategory=subCategoryId.name;
-            tempResult.category=subCategoryId.categoryId.name;
-            result.push(tempResult)
+                const {quantity,productId }=data
+                if(productId){
+                const {name,code,size,subCategoryId}=productId;
+                    if(subCategoryId || subCategoryId.categoryId){
+                    tempResult.invoiceDate=invoice.invoiceDate;
+                    tempResult.invoiceNo=invoice.id;
+                    tempResult.type=invoice.type;
+                    tempResult.clientName=invoice.clientName.name;
+                    tempResult.name=name;
+                    tempResult.code=code;
+                    tempResult.size=size;
+                    tempResult.quantity=quantity;
+                    tempResult.subCategory=subCategoryId.name;
+                    tempResult.category=subCategoryId.categoryId.name;
+                    result.push(tempResult);
+                    }
+                }
         });
     });
     return result;
